@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz · Derecho Civil · Semana 4 · Persona Humana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:    #0A1F3D;
+    --navy2:   #123164;
+    --navy3:   #1A4A8A;
+    --sky:     #4A90D9;
+    --sky2:    #6AAEE8;
+    --skylt:   #A8CFEE;
+    --white:   #FFFFFF;
+    --off:     #F0F6FB;
+    --slate:   #4A6080;
+    --green:   #2E7D32;
+    --greenlt: #4CAF50;
+    --red:     #C62828;
+    --redlt:   #EF5350;
+    --orange:  #E65100;
+    --gold:    #F9A825;
+    --silver:  #90A4AE;
+    --bronze:  #8D6E63;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Barlow', sans-serif; background: var(--navy); color: var(--white); min-height: 100vh; overflow-x: hidden; }
+
+  .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; }
+  .screen.active { display: flex; }
+
+  /* ── INICIO ── */
+  #screen-start { background: var(--navy); position: relative; overflow: hidden; }
+  #screen-start::before { content:''; position:absolute; top:-120px; right:-120px; width:420px; height:420px; border-radius:50%; background:radial-gradient(circle, rgba(74,144,217,.18) 0%, transparent 70%); pointer-events:none; }
+  .start-badge { font-family:'Barlow Condensed',sans-serif; font-size:.72rem; font-weight:700; letter-spacing:.18em; color:var(--sky); text-transform:uppercase; margin-bottom:.8rem; }
+  .start-title { font-family:'Barlow Condensed',sans-serif; font-size:clamp(2rem,7vw,3.5rem); font-weight:900; line-height:1; text-align:center; margin-bottom:.35rem; }
+  .start-title span { color:var(--sky); }
+  .start-sub { font-size:.95rem; color:var(--skylt); text-align:center; margin-bottom:.5rem; }
+  .start-rules { display:flex; gap:1.2rem; margin-bottom:2rem; flex-wrap:wrap; justify-content:center; }
+  .rule-chip { background:rgba(74,144,217,.12); border:1px solid rgba(74,144,217,.3); border-radius:20px; padding:.3rem .85rem; font-size:.8rem; color:var(--skylt); }
+  .name-group { width:100%; max-width:380px; margin-bottom:1.2rem; }
+  .name-group label { display:block; font-size:.78rem; font-weight:600; letter-spacing:.1em; color:var(--skylt); text-transform:uppercase; margin-bottom:.45rem; }
+  .name-group input { width:100%; padding:.85rem 1.1rem; background:rgba(74,144,217,.1); border:1.5px solid rgba(74,144,217,.35); border-radius:10px; color:var(--white); font-family:'Barlow',sans-serif; font-size:1rem; outline:none; transition:border-color .2s,background .2s; }
+  .name-group input:focus { border-color:var(--sky); background:rgba(74,144,217,.18); }
+  .name-group input::placeholder { color:var(--slate); }
+  .btn-primary { display:inline-flex; align-items:center; gap:.55rem; padding:.95rem 2.2rem; background:var(--sky); color:var(--navy); font-family:'Barlow Condensed',sans-serif; font-size:1.15rem; font-weight:700; letter-spacing:.06em; border:none; border-radius:10px; cursor:pointer; transition:transform .15s,background .15s,box-shadow .15s; box-shadow:0 4px 18px rgba(74,144,217,.35); }
+  .btn-primary:hover { background:var(--sky2); transform:translateY(-2px); box-shadow:0 8px 24px rgba(74,144,217,.45); }
+
+  /* ── HEADER QUIZ ── */
+  .quiz-header { width:100%; background:var(--navy2); padding:.7rem 1.2rem; display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid rgba(74,144,217,.2); position:sticky; top:0; z-index:10; flex-shrink:0; }
+  .header-name { font-family:'Barlow Condensed',sans-serif; font-size:.85rem; font-weight:600; color:var(--skylt); letter-spacing:.05em; }
+  .header-score { font-family:'Barlow Condensed',sans-serif; font-size:1.1rem; font-weight:700; color:var(--sky); }
+  .progress-bar-wrap { height:4px; background:rgba(74,144,217,.15); width:100%; }
+  .progress-bar { height:4px; background:var(--sky); transition:width .4s ease; }
+
+  /* ── PREGUNTA ── */
+  #screen-question { background:var(--navy); padding:0; justify-content:flex-start; align-items:stretch; }
+  .question-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1.2rem 1.2rem .8rem; gap:1rem; }
+  .q-meta { display:flex; align-items:center; gap:.8rem; width:100%; max-width:600px; }
+  .q-num { font-family:'Barlow Condensed',sans-serif; font-size:.78rem; font-weight:700; letter-spacing:.12em; color:var(--sky); text-transform:uppercase; }
+
+  /* Timer circular */
+  .timer-wrap { margin-left:auto; flex-shrink:0; position:relative; width:52px; height:52px; }
+  .timer-svg { transform:rotate(-90deg); }
+  .timer-bg { fill:none; stroke:rgba(74,144,217,.2); stroke-width:4; }
+  .timer-arc { fill:none; stroke:var(--sky); stroke-width:4; stroke-linecap:round; transition:stroke-dashoffset .9s linear, stroke .3s; }
+  .timer-num { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'Barlow Condensed',sans-serif; font-size:1.1rem; font-weight:700; color:var(--white); }
+  .timer-wrap.urgent .timer-arc { stroke:var(--redlt); }
+  .timer-wrap.urgent .timer-num { color:var(--redlt); animation:pulse .6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.1)} }
+
+  /* Barra de velocidad */
+  .speed-bar-wrap { width:100%; max-width:600px; }
+  .speed-label { display:flex; justify-content:space-between; font-size:.72rem; color:var(--slate); margin-bottom:.3rem; }
+  .speed-bar-bg { height:6px; background:rgba(74,144,217,.15); border-radius:3px; overflow:hidden; }
+  .speed-bar { height:6px; background:linear-gradient(90deg, var(--greenlt), var(--gold), var(--orange)); border-radius:3px; transition:width .9s linear; }
+
+  .q-text { font-family:'Barlow Condensed',sans-serif; font-size:clamp(1.15rem,4vw,1.6rem); font-weight:700; line-height:1.25; text-align:center; max-width:600px; width:100%; }
+
+  .options-grid { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; width:100%; max-width:600px; }
+  @media(max-width:420px){ .options-grid{ grid-template-columns:1fr; } }
+
+  .opt-btn { display:flex; align-items:flex-start; gap:.6rem; padding:.85rem .95rem; border:2px solid transparent; border-radius:12px; background:var(--navy2); color:var(--white); font-family:'Barlow',sans-serif; font-size:.92rem; font-weight:500; line-height:1.35; cursor:pointer; text-align:left; transition:background .15s,border-color .15s,transform .12s; -webkit-tap-highlight-color:transparent; }
+  .opt-btn:hover:not(:disabled) { background:rgba(74,144,217,.18); border-color:rgba(74,144,217,.4); transform:translateY(-1px); }
+  .opt-btn:disabled { cursor:default; }
+  .opt-letter { font-family:'Barlow Condensed',sans-serif; font-size:.82rem; font-weight:700; min-width:22px; height:22px; border-radius:6px; background:rgba(74,144,217,.25); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.05rem; transition:background .15s; }
+  .opt-btn.correct { background:rgba(46,125,50,.25); border-color:var(--greenlt); }
+  .opt-btn.correct .opt-letter { background:var(--greenlt); color:var(--navy); }
+  .opt-btn.wrong { background:rgba(198,40,40,.2); border-color:var(--redlt); }
+  .opt-btn.wrong .opt-letter { background:var(--redlt); }
+  .opt-btn.selected-correct { background:rgba(46,125,50,.35); border-color:var(--greenlt); }
+  .opt-btn.selected-wrong { background:rgba(198,40,40,.3); border-color:var(--redlt); animation:shake .35s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+  .feedback-box { width:100%; max-width:600px; border-radius:12px; padding:.85rem 1rem; font-size:.9rem; line-height:1.5; display:none; }
+  .feedback-box.correct-fb { background:rgba(46,125,50,.2); border:1.5px solid var(--greenlt); }
+  .feedback-box.wrong-fb   { background:rgba(198,40,40,.15); border:1.5px solid var(--redlt); }
+  .feedback-box .fb-title  { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:1rem; margin-bottom:.3rem; }
+  .feedback-box.correct-fb .fb-title { color:var(--greenlt); }
+  .feedback-box.wrong-fb   .fb-title { color:var(--redlt); }
+  .feedback-box .fb-body   { color:var(--skylt); }
+
+  .btn-next { padding:.75rem 1.8rem; background:var(--sky); color:var(--navy); font-family:'Barlow Condensed',sans-serif; font-size:1rem; font-weight:700; letter-spacing:.06em; border:none; border-radius:10px; cursor:pointer; display:none; transition:background .15s,transform .12s; }
+  .btn-next:hover { background:var(--sky2); transform:translateY(-1px); }
+
+  /* ── RESULTADO ── */
+  #screen-result { background:var(--navy); position:relative; overflow:hidden; text-align:center; gap:1.1rem; }
+  #screen-result::before { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:500px; height:500px; border-radius:50%; background:radial-gradient(circle, rgba(74,144,217,.12) 0%, transparent 65%); pointer-events:none; }
+  .result-emoji { font-size:3.5rem; line-height:1; }
+  .result-name { font-family:'Barlow Condensed',sans-serif; font-size:.82rem; font-weight:700; letter-spacing:.15em; color:var(--sky); text-transform:uppercase; }
+  .result-score-big { font-family:'Barlow Condensed',sans-serif; font-size:clamp(4rem,15vw,6rem); font-weight:900; line-height:1; color:var(--sky); }
+  .result-score-label { font-size:.88rem; color:var(--skylt); margin-top:-.3rem; }
+  .result-medal { font-family:'Barlow Condensed',sans-serif; font-size:1.1rem; font-weight:700; padding:.45rem 1.2rem; border-radius:20px; display:inline-block; }
+  .medal-gold   { background:rgba(249,168,37,.2);  border:1.5px solid var(--gold);   color:var(--gold);   }
+  .medal-silver { background:rgba(144,164,174,.2); border:1.5px solid var(--silver); color:var(--silver); }
+  .medal-bronze { background:rgba(141,110,99,.2);  border:1.5px solid var(--bronze); color:var(--bronze); }
+  .medal-ok     { background:rgba(74,144,217,.15); border:1.5px solid var(--sky);    color:var(--sky);    }
+  .result-breakdown { width:100%; max-width:440px; background:var(--navy2); border-radius:14px; overflow:hidden; border:1px solid rgba(74,144,217,.2); }
+  .breakdown-row { display:flex; align-items:center; gap:.7rem; padding:.65rem 1rem; border-bottom:1px solid rgba(74,144,217,.1); font-size:.88rem; }
+  .breakdown-row:last-child { border-bottom:none; }
+  .breakdown-icon { font-size:1rem; flex-shrink:0; }
+  .breakdown-q { color:var(--skylt); flex:1; text-align:left; line-height:1.3; }
+  .breakdown-badge { font-family:'Barlow Condensed',sans-serif; font-size:.78rem; font-weight:700; padding:.2rem .55rem; border-radius:6px; flex-shrink:0; }
+  .breakdown-badge.ok  { background:rgba(46,125,50,.25); color:var(--greenlt); }
+  .breakdown-badge.bad { background:rgba(198,40,40,.2);  color:var(--redlt); }
+  .btn-retry { padding:.75rem 1.8rem; background:transparent; color:var(--skylt); font-family:'Barlow Condensed',sans-serif; font-size:.95rem; font-weight:600; letter-spacing:.06em; border:1.5px solid rgba(74,144,217,.3); border-radius:10px; cursor:pointer; transition:border-color .15s,color .15s; }
+  .btn-retry:hover { border-color:var(--sky); color:var(--sky); }
+
+  .confetti-piece { position:fixed; width:8px; height:8px; border-radius:2px; animation:confettiFall linear forwards; pointer-events:none; z-index:100; }
+  @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+</style>
+</head>
+<body>
+
+<!-- INICIO -->
+<div id="screen-start" class="screen active">
+  <p class="start-badge">Derecho Civil · Semana 4</p>
+  <h1 class="start-title">Persona<br><span>Humana</span></h1>
+  <p class="start-sub">Existencia · Ausencia · Capacidad · Personalidad</p>
+  <div class="start-rules">
+    <span class="rule-chip">10 preguntas</span>
+    <span class="rule-chip">⏱ 45 segundos</span>
+    <span class="rule-chip">🏆 Más rápido = más puntos</span>
+  </div>
+  <div class="name-group">
+    <label for="player-name">Tu nombre</label>
+    <input id="player-name" type="text" placeholder="Ej: María González" maxlength="40" autocomplete="off">
+  </div>
+  <button class="btn-primary" onclick="startQuiz()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    Empezar
+  </button>
+</div>
+
+<!-- PREGUNTA -->
+<div id="screen-question" class="screen">
+  <div class="quiz-header">
+    <div style="display:flex;align-items:center;gap:.7rem;">
+      <span id="hdr-name" class="header-name"></span>
+    </div>
+    <span id="hdr-score" class="header-score">0 pts</span>
+  </div>
+  <div class="progress-bar-wrap"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
+
+  <div class="question-body">
+    <div class="q-meta">
+      <span id="q-num" class="q-num"></span>
+      <div class="timer-wrap" id="timer-wrap">
+        <svg class="timer-svg" width="52" height="52" viewBox="0 0 52 52">
+          <circle class="timer-bg" cx="26" cy="26" r="22"/>
+          <circle class="timer-arc" id="timer-arc" cx="26" cy="26" r="22"
+            stroke-dasharray="138.2" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-num" id="timer-num">45</div>
+      </div>
+    </div>
+
+    <div class="speed-bar-wrap">
+      <div class="speed-label">
+        <span>Velocidad de respuesta</span>
+        <span id="pts-preview">Hasta 150 pts</span>
+      </div>
+      <div class="speed-bar-bg"><div id="speed-bar" class="speed-bar" style="width:100%"></div></div>
+    </div>
+
+    <p id="q-text" class="q-text"></p>
+    <div id="options-grid" class="options-grid"></div>
+    <div id="feedback-box" class="feedback-box">
+      <div class="fb-title" id="fb-title"></div>
+      <div class="fb-body"  id="fb-body"></div>
+    </div>
+    <button id="btn-next" class="btn-next" onclick="nextQuestion()">Siguiente →</button>
+  </div>
+</div>
+
+<!-- RESULTADO -->
+<div id="screen-result" class="screen">
+  <div id="result-emoji" class="result-emoji"></div>
+  <p id="result-name" class="result-name"></p>
+  <div id="result-score-big" class="result-score-big"></div>
+  <p id="result-score-label" class="result-score-label"></p>
+  <div id="result-medal" class="result-medal"></div>
+  <div id="result-breakdown" class="result-breakdown"></div>
+  <button class="btn-retry" onclick="restartQuiz()">↺ Intentar de nuevo</button>
+</div>
+
+<script>
+// ── BANCO DE PREGUNTAS ─────────────────────────────────
+const QUESTIONS = [
+  {
+    q: "¿Desde cuándo comienza la existencia de la persona humana según el Art. 19 CCyC?",
+    opts: [
+      "Desde el nacimiento con vida",
+      "Desde la concepción",
+      "Desde los 3 meses de gestación",
+      "Desde la inscripción en el Registro Civil"
+    ],
+    correct: 1,
+    fb: "Art. 19 CCyC: la existencia comienza con la concepción, ya sea dentro del cuerpo (gestación natural) o fuera (TRHA: desde la implantación del embrión)."
+  },
+  {
+    q: "¿Qué diferencia principal introduce el CCyC respecto al Código de Vélez en materia de comienzo de la existencia?",
+    opts: [
+      "Vélez establecía los 6 meses de gestación como inicio; el CCyC, el nacimiento",
+      "Vélez exigía inscripción registral; el CCyC no",
+      "Vélez decía 'en el seno materno'; el CCyC eliminó esa referencia para incluir las TRHA",
+      "No hay diferencias relevantes entre ambos códigos"
+    ],
+    correct: 2,
+    fb: "El Código de Vélez decía 'en el seno materno'. El CCyC eliminó esa referencia para contemplar la fecundación in vitro y otras TRHA, donde la existencia comienza con la implantación del embrión."
+  },
+  {
+    q: "Un bebé nace con vida pero fallece 20 minutos después. Su abuelo había fallecido 2 días antes dejando herencia. ¿Qué ocurre con los derechos hereditarios del bebé?",
+    opts: [
+      "No hereda porque vivió menos de 24 horas",
+      "Hereda, y esa herencia se transmite a sus propios herederos",
+      "Se considera que nunca existió por haber fallecido tan pronto",
+      "La herencia queda en suspenso hasta que resuelva el juez"
+    ],
+    correct: 1,
+    fb: "Art. 21 CCyC: si nace con vida, los derechos quedan irrevocablemente adquiridos aunque muera instantes después. Esos derechos se transmiten a sus herederos (en este caso, sus padres)."
+  },
+  {
+    q: "Dos personas fallecen en el mismo accidente y no puede determinarse quién murió primero. ¿Qué regla aplica el CCyC?",
+    opts: [
+      "Se presume que murió primero el de mayor edad",
+      "El juez elige quién murió primero según las pruebas disponibles",
+      "Se presume que fallecieron simultáneamente — ninguna hereda a la otra",
+      "Se suspende la sucesión hasta que se determine el orden de los fallecimientos"
+    ],
+    correct: 2,
+    fb: "Art. 95 CCyC — Conmoriencia: si no puede probarse cuál de las dos personas murió primero, se presume que fallecieron simultáneamente. Ninguna hereda a la otra."
+  },
+  {
+    q: "¿Cuál es la diferencia fundamental entre la ausencia simple y la presunción de fallecimiento?",
+    opts: [
+      "La ausencia simple requiere un plazo mínimo de 3 años; la presunción no tiene plazo",
+      "La ausencia simple no presume la muerte y solo protege los bienes; la presunción declara fallecida a la persona",
+      "La presunción simple solo aplica a mayores de edad; la ausencia aplica a cualquier persona",
+      "No hay diferencias — son dos nombres para la misma institución"
+    ],
+    correct: 1,
+    fb: "La ausencia simple (Arts. 79–84 CCyC) no presume la muerte — solo designa un curador de bienes. La presunción de fallecimiento (Arts. 85–92 CCyC) declara muerta a la persona, abre la herencia y disuelve el matrimonio."
+  },
+  {
+    q: "Una persona desaparece sin noticias tras un terremoto. ¿Cuál es el plazo y el caso de presunción de fallecimiento que corresponde?",
+    opts: [
+      "Caso ordinario — 3 años desde la última noticia",
+      "Caso extraordinario específico — 6 meses desde el suceso",
+      "Caso extraordinario genérico — 2 años desde el suceso de peligro",
+      "No aplica presunción porque no hay certeza del suceso"
+    ],
+    correct: 2,
+    fb: "Art. 86 inc. 1 CCyC — Caso extraordinario genérico: cuando la persona estuvo en un lugar de peligro de vida (guerra, terremoto, naufragio, incendio), el plazo es de 2 años desde el suceso."
+  },
+  {
+    q: "¿Qué es la prenotación en el contexto de la presunción de fallecimiento?",
+    opts: [
+      "La notificación previa que se hace al ausente antes de iniciar el juicio",
+      "Una anotación registral que indica que los bienes provienen de una sucesión presunta e impide su libre disposición",
+      "El período de espera antes de que el juez dicte sentencia",
+      "El inventario previo que deben presentar los herederos"
+    ],
+    correct: 1,
+    fb: "La prenotación (Art. 91 CCyC) es una anotación en el registro que aclara que los bienes provienen de una sucesión abierta por presunción de fallecimiento. Durante ese período los bienes no pueden venderse ni gravarse sin autorización judicial."
+  },
+  {
+    q: "¿Por qué no existe la incapacidad absoluta de derecho en el CCyC?",
+    opts: [
+      "Porque el CCyC no regula la capacidad — lo hace el Código Penal",
+      "Porque privar a alguien de toda capacidad de derecho equivaldría a la esclavitud, prohibida por el Art. 15 CN",
+      "Porque solo existe en menores de edad y personas con discapacidad",
+      "Porque el CCyC eliminó todas las formas de incapacidad"
+    ],
+    correct: 1,
+    fb: "Negar toda capacidad de derecho implica negar la condición de persona — eso es la esclavitud. El Art. 15 CN la prohíbe expresamente. Solo existen incapacidades relativas para actos específicos (ej: Art. 1002 — el juez no puede comprar bienes del proceso)."
+  },
+  {
+    q: "¿En qué se diferencia la inhabilitación del pródigo (Art. 48 CCyC) de la restricción a la capacidad del Art. 32 CCyC?",
+    opts: [
+      "El Art. 32 requiere una afección mental o adicción; el Art. 48 se funda en el comportamiento patrimonial perjudicial para la familia",
+      "El Art. 48 requiere demencia; el Art. 32 solo requiere prodigalidad",
+      "Ambos artículos regulan exactamente lo mismo con distinta denominación",
+      "El Art. 32 aplica a adultos mayores; el Art. 48 solo a menores de edad"
+    ],
+    correct: 0,
+    fb: "El Art. 32 CCyC exige una afección mental permanente o adicción de suficiente gravedad. El Art. 48 se funda exclusivamente en el comportamiento patrimonial desordenado que expone a la familia a la pérdida del patrimonio — no requiere ninguna enfermedad."
+  },
+  {
+    q: "¿Cuál de los siguientes derechos de la personalidad está expresamente regulado en el Art. 53 CCyC?",
+    opts: [
+      "El derecho a la vida",
+      "El derecho al honor",
+      "El derecho a la imagen y a la voz",
+      "El derecho a la identidad de género"
+    ],
+    correct: 2,
+    fb: "Art. 53 CCyC regula el derecho a la imagen y la voz: nadie puede captar, reproducir ni circular la imagen de una persona sin su consentimiento. La voz recibe el mismo tratamiento. La identidad de género está en la Ley 26.743."
+  },
+];
+
+const TIMER_SECS = 45;
+const PTS_MAX    = 150;
+const PTS_MIN    = 30;
+const LETTERS    = ['A','B','C','D'];
+const CIRCUM     = 2 * Math.PI * 22; // 138.2
+
+let playerName = '';
+let currentQ   = 0;
+let score      = 0;
+let timerInt   = null;
+let timeLeft   = TIMER_SECS;
+let answered   = false;
+let results    = [];
+
+// ── Puntaje según velocidad ────────────────────────────
+function calcPts(secondsLeft) {
+  // Lineal: 45s → 150pts, 0s → 30pts
+  return Math.round(PTS_MIN + (PTS_MAX - PTS_MIN) * (secondsLeft / TIMER_SECS));
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz() {
+  const inp = document.getElementById('player-name').value.trim();
+  if (!inp) { document.getElementById('player-name').focus(); return; }
+  playerName = inp;
+  currentQ = 0; score = 0; results = [];
+  showScreen('screen-question');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  timeLeft = TIMER_SECS;
+  const q = QUESTIONS[currentQ];
+
+  document.getElementById('hdr-name').textContent   = playerName;
+  document.getElementById('hdr-score').textContent  = score + ' pts';
+  document.getElementById('q-num').textContent      = `Pregunta ${currentQ + 1} / ${QUESTIONS.length}`;
+  document.getElementById('q-text').textContent     = q.q;
+  document.getElementById('progress-bar').style.width = (currentQ / QUESTIONS.length * 100) + '%';
+  document.getElementById('pts-preview').textContent = `Hasta ${PTS_MAX} pts`;
+
+  // Timer reset
+  const arc = document.getElementById('timer-arc');
+  const wrap = document.getElementById('timer-wrap');
+  const num  = document.getElementById('timer-num');
+  arc.style.strokeDashoffset = '0';
+  arc.style.transition = 'none';
+  num.textContent = TIMER_SECS;
+  wrap.classList.remove('urgent');
+
+  // Speed bar reset
+  document.getElementById('speed-bar').style.width = '100%';
+  document.getElementById('speed-bar').style.transition = 'none';
+
+  // Feedback / next reset
+  const fb = document.getElementById('feedback-box');
+  fb.style.display = 'none';
+  fb.className = 'feedback-box';
+  document.getElementById('btn-next').style.display = 'none';
+
+  // Opciones mezcladas
+  const indices  = [0,1,2,3];
+  const shuffled = [...indices].sort(() => Math.random() - .5);
+
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  shuffled.forEach((origIdx, dispIdx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.dataset.orig    = origIdx;
+    btn.dataset.correct = origIdx === q.correct ? '1' : '0';
+    btn.innerHTML = `<span class="opt-letter">${LETTERS[dispIdx]}</span>${q.opts[origIdx]}`;
+    btn.onclick = () => selectAnswer(btn, origIdx === q.correct);
+    grid.appendChild(btn);
+  });
+
+  // Iniciar timer
+  clearInterval(timerInt);
+  setTimeout(() => {
+    arc.style.transition  = `stroke-dashoffset ${TIMER_SECS}s linear`;
+    arc.style.strokeDashoffset = String(CIRCUM);
+    document.getElementById('speed-bar').style.transition = `width ${TIMER_SECS}s linear`;
+    document.getElementById('speed-bar').style.width = '0%';
+  }, 50);
+
+  timerInt = setInterval(() => {
+    timeLeft--;
+    num.textContent = timeLeft;
+    document.getElementById('pts-preview').textContent = `~${calcPts(timeLeft)} pts`;
+    if (timeLeft <= 10) wrap.classList.add('urgent');
+    if (timeLeft <= 0)  { clearInterval(timerInt); timeExpired(); }
+  }, 1000);
+}
+
+function selectAnswer(btn, isCorrect) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInt);
+
+  const pts = isCorrect ? calcPts(timeLeft) : 0;
+  score += pts;
+  results.push({ q: QUESTIONS[currentQ].q, correct: isCorrect, pts });
+
+  document.querySelectorAll('.opt-btn').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.correct === '1') b.classList.add('correct');
+  });
+  if (isCorrect) btn.classList.add('selected-correct');
+  else           btn.classList.add('selected-wrong');
+
+  showFeedback(isCorrect, false, pts);
+  document.getElementById('hdr-score').textContent = score + ' pts';
+}
+
+function timeExpired() {
+  if (answered) return;
+  answered = true;
+  results.push({ q: QUESTIONS[currentQ].q, correct: false, pts: 0 });
+  document.querySelectorAll('.opt-btn').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.correct === '1') b.classList.add('correct');
+  });
+  showFeedback(false, true, 0);
+}
+
+function showFeedback(isCorrect, expired, pts) {
+  const fb  = document.getElementById('feedback-box');
+  const tit = document.getElementById('fb-title');
+  const bod = document.getElementById('fb-body');
+  fb.style.display = 'block';
+  if (expired) {
+    fb.className = 'feedback-box wrong-fb';
+    tit.textContent = '⏱ Tiempo agotado';
+  } else if (isCorrect) {
+    fb.className = 'feedback-box correct-fb';
+    tit.textContent = `¡Correcto! +${pts} pts`;
+  } else {
+    fb.className = 'feedback-box wrong-fb';
+    tit.textContent = 'Incorrecto';
+  }
+  bod.textContent = QUESTIONS[currentQ].fb;
+  document.getElementById('btn-next').style.display = 'inline-block';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= QUESTIONS.length) showResults();
+  else renderQuestion();
+}
+
+function showResults() {
+  showScreen('screen-result');
+  const correct = results.filter(r => r.correct).length;
+  const maxScore = QUESTIONS.length * PTS_MAX;
+  const pct = score / maxScore;
+
+  let emoji, medalClass, medalText;
+  if (correct === QUESTIONS.length) {
+    emoji = '🏆'; medalClass = 'medal-gold';   medalText = '¡Puntaje perfecto!';
+  } else if (correct >= 8) {
+    emoji = '⭐'; medalClass = 'medal-silver'; medalText = 'Muy bien logrado';
+  } else if (correct >= 6) {
+    emoji = '👍'; medalClass = 'medal-bronze'; medalText = 'Buen intento';
+  } else {
+    emoji = '📚'; medalClass = 'medal-ok';     medalText = 'Seguí repasando';
+  }
+
+  document.getElementById('result-emoji').textContent      = emoji;
+  document.getElementById('result-name').textContent       = playerName.toUpperCase();
+  document.getElementById('result-score-big').textContent  = score;
+  document.getElementById('result-score-label').textContent = `${correct} de ${QUESTIONS.length} correctas · máximo posible: ${maxScore} pts`;
+  const medal = document.getElementById('result-medal');
+  medal.className = 'result-medal ' + medalClass;
+  medal.textContent = medalText;
+
+  const bd = document.getElementById('result-breakdown');
+  bd.innerHTML = results.map((r, i) => `
+    <div class="breakdown-row">
+      <span class="breakdown-icon">${r.correct ? '✅' : '❌'}</span>
+      <span class="breakdown-q">P${i+1}: ${QUESTIONS[i].q.substring(0, 52)}${QUESTIONS[i].q.length > 52 ? '…' : ''}</span>
+      <span class="breakdown-badge ${r.correct ? 'ok' : 'bad'}">${r.correct ? '+' + r.pts : '0'}</span>
+    </div>
+  `).join('');
+
+  if (correct >= 8) launchConfetti();
+  registrar(playerName, score, correct);
+}
+
+function registrar(nombre, puntaje, correctas) {
+  const url = "https://script.google.com/macros/s/AKfycbynmNfP2amuXuGxtQG7gy0dQ4L2EqRF6Tbj3Cv9XQfedBGNP3nnPdmUqfmS194YE0A_/exec";
+  fetch(url, {
+    method: "POST", mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nombre,
+      materia:   "Derecho Civil",
+      quiz:      "Semana 4 — Persona Humana",
+      puntaje,
+      correctas: correctas + " / " + QUESTIONS.length,
+    }),
+  }).catch(() => {});
+}
+
+function launchConfetti() {
+  const colors = ['#4A90D9','#A8CFEE','#FFFFFF','#2E7D32','#E65100','#F9A825'];
+  for (let i = 0; i < 70; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `left:${Math.random()*100}vw;top:-10px;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*.8}s;width:${6+Math.random()*6}px;height:${6+Math.random()*6}px;transform:rotate(${Math.random()*360}deg);`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }, i * 25);
+  }
+}
+
+function restartQuiz() {
+  currentQ = 0; score = 0; results = [];
+  showScreen('screen-question');
+  renderQuestion();
+}
+
+document.getElementById('player-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startQuiz();
+});
+</script>
+</body>
+</html>
